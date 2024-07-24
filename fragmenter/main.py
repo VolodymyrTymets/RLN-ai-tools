@@ -11,8 +11,8 @@ CHANNELS = 1
 MAX_AMPLITUDE = 32767
 # sample rate - count of samples per seconds
 RATE = 44100
-MAX_FRAGMENT_LENGTH = RATE * 1.9
-MIN_FRAGMENT_LENGTH = RATE / 0.6
+MAX_FRAGMENT_LENGTH = RATE * 2
+MIN_FRAGMENT_LENGTH = RATE / 0.3
 # on how much (in percent) amplitude shoulb be upper silence to determinate start of fragment
 THRESHOLD_OF_SILENCE = 0.8
 
@@ -26,7 +26,7 @@ class Fragmenter:
         self.rare_fragment = []
         self.noise = []
         self.rare_noise = []
-        self.source_file = source_file
+        self.source_file = source_file        
 
     def create_folder(self, directory: str):
         if not os.path.exists(directory):
@@ -40,7 +40,7 @@ class Fragmenter:
         print('--> write to:', file_name)
         wav_file = wave.open(file_name, 'w')
         wav_file.setparams(
-            (self.source_file.getnchannels(), self.source_file.getsampwidth(), self.source_file.getframerate(), self.source_file.getnframes(), "NONE", "not compressed"))
+            (1, self.source_file.getsampwidth(), self.source_file.getframerate(), self.source_file.getnframes(), "NONE", "not compressed"))
         for sample in chunk:
             wav_file.writeframes(struct.pack('h', int(sample)))
 
