@@ -1,6 +1,7 @@
 import tensorflow as tf
 
 RATE = 44100
+FRAGMENT_LENGTH = RATE * 2
 
 
 def get_spectrogram(waveform):
@@ -27,7 +28,7 @@ class ExportModel(tf.Module):
         self.__call__.get_concrete_function(
             x=tf.TensorSpec(shape=(), dtype=tf.string))
         self.__call__.get_concrete_function(
-            x=tf.TensorSpec(shape=[None, RATE], dtype=tf.float32))
+            x=tf.TensorSpec(shape=[None, FRAGMENT_LENGTH], dtype=tf.float32))
 
     @tf.function
     def __call__(self, x):
@@ -35,7 +36,7 @@ class ExportModel(tf.Module):
         if x.dtype == tf.string:
             x = tf.io.read_file(x)
             x, _ = tf.audio.decode_wav(
-                x, desired_channels=1, desired_samples=RATE,)
+                x, desired_channels=1, desired_samples=FRAGMENT_LENGTH,)
             x = tf.squeeze(x, axis=-1)
             x = x[tf.newaxis, :]
 

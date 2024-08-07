@@ -14,6 +14,8 @@ np.random.seed(seed)
 
 DATASET_PATH = 'assetss'
 EPOCHS = 10
+RATE = 44100
+FRAGMENT_LENGTH = RATE * 2
 
 # utils
 
@@ -30,13 +32,13 @@ def ds_to_spectrogram(ds):
 
 
 # Form data storage
-data_dir = pathlib.Path(os.path.join(DATASET_PATH, 'train'))
+data_dir = pathlib.Path(os.path.join(DATASET_PATH, 'data-set', 'train'))
 train_ds, val_ds = tf.keras.utils.audio_dataset_from_directory(
     directory=data_dir,
     batch_size=32,
     validation_split=0.2,
     seed=0,
-    output_sequence_length=44100,
+    output_sequence_length=FRAGMENT_LENGTH,
     subset='both')
 label_names = np.array(train_ds.class_names)
 
@@ -98,7 +100,7 @@ for example_spectrograms, example_spect_labels in train_spectrogram_ds.take(1):
 
 # Save model
 export = ExportModel(model=model, label_names=label_names)
-model_dir = pathlib.Path(os.path.join(DATASET_PATH, 'rln-model'))
+model_dir = pathlib.Path(os.path.join(DATASET_PATH, 'rln-model_{}'.format(int(FRAGMENT_LENGTH / RATE))))
 tf.saved_model.save(export, model_dir)
 
 print('Model is saved to: {}'.format(model_dir))
