@@ -4,6 +4,10 @@ RATE = 44100
 FRAGMENT_LENGTH = RATE * 2
 
 
+def get_hamming(waveform):
+    window = tf.signal.hamming_window(window_length=waveform.shape[1])
+    return waveform * window
+
 def get_spectrogram(waveform):
     # Convert the waveform to a spectrogram via a STFT.
     spectrogram = tf.signal.stft(
@@ -19,9 +23,10 @@ def get_spectrogram(waveform):
 
 
 class ExportModel(tf.Module):
-    def __init__(self, model, label_names):
+    def __init__(self, model, label_names, hamming):
         self.model = model
         self.label_names = label_names
+        self.hamming = hamming
 
         # Accept either a string-filename or a batch of waveforms.
         # YOu could add additional signatures for a single wave, or a ragged-batch.
@@ -39,7 +44,9 @@ class ExportModel(tf.Module):
                 x, desired_channels=1, desired_samples=FRAGMENT_LENGTH,)
             x = tf.squeeze(x, axis=-1)
             x = x[tf.newaxis, :]
-
+        if(self.hamming):    
+            # hummming before hamming    
+            x = get_hamming(x)
         x = get_spectrogram(x)
         result = self.model(x, training=False)
 

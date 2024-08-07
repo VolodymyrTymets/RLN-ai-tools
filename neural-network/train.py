@@ -5,7 +5,7 @@ import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras import models
 
-from model import ExportModel, get_spectrogram
+from model import ExportModel, get_spectrogram, get_hamming
 
 # Set the seed value for experiment reproducibility.
 seed = 42
@@ -16,6 +16,7 @@ DATASET_PATH = 'assetss'
 EPOCHS = 10
 RATE = 44100
 FRAGMENT_LENGTH = RATE * 2
+WITH_HUMMING = True
 
 # utils
 
@@ -28,6 +29,11 @@ def squeeze(audio, labels):
 def ds_to_spectrogram(ds):
     return ds.map(
         map_func=lambda audio, label: (get_spectrogram(audio), label),
+        num_parallel_calls=tf.data.AUTOTUNE)
+
+def ds_to_hamming(ds):
+    return ds.map(
+        map_func=lambda audio, label: (get_hamming(audio), label),
         num_parallel_calls=tf.data.AUTOTUNE)
 
 
@@ -47,8 +53,12 @@ train_ds = train_ds.map(squeeze, tf.data.AUTOTUNE)
 val_ds = val_ds.map(squeeze, tf.data.AUTOTUNE)
 val_ds = val_ds.shard(num_shards=2, index=1)
 
-train_spectrogram_ds = ds_to_spectrogram(train_ds)
-val_spectrogram_ds = ds_to_spectrogram(val_ds)
+train_hamming_ds = ds_to_hamming(train_ds)
+val_hamming_ds = ds_to_hamming(val_ds)
+
+
+train_spectrogram_ds = ds_to_spectrogram(train_ds if WITH_HUMMING == False else train_hamming_ds)
+val_spectrogram_ds = ds_to_spectrogram(train_ds if WITH_HUMMING == False else train_hamming_ds)
 
 
 # Training model
@@ -99,7 +109,7 @@ for example_spectrograms, example_spect_labels in train_spectrogram_ds.take(1):
     )
 
 # Save model
-export = ExportModel(model=model, label_names=label_names)
+export = ExportModel(model=model, label_names=label_names, hamming=WITH_HUMMING)
 model_dir = pathlib.Path(os.path.join(DATASET_PATH, 'rln-model_{}'.format(int(FRAGMENT_LENGTH / RATE))))
 tf.saved_model.save(export, model_dir)
 
