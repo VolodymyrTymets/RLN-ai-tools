@@ -1,9 +1,5 @@
 import tensorflow as tf
 
-RATE = 44100
-FRAGMENT_LENGTH = RATE * 2
-
-
 def get_hamming(waveform):
     window = tf.signal.hamming_window(window_length=waveform.shape[1])
     return waveform * window
@@ -23,17 +19,18 @@ def get_spectrogram(waveform):
 
 
 class ExportModel(tf.Module):
-    def __init__(self, model, label_names, hamming):
+    def __init__(self, model, label_names, hamming, fragment_length):
         self.model = model
         self.label_names = label_names
         self.hamming = hamming
+        self.fragment_length = fragment_length
 
         # Accept either a string-filename or a batch of waveforms.
         # YOu could add additional signatures for a single wave, or a ragged-batch.
         self.__call__.get_concrete_function(
             x=tf.TensorSpec(shape=(), dtype=tf.string))
         self.__call__.get_concrete_function(
-            x=tf.TensorSpec(shape=[None, FRAGMENT_LENGTH], dtype=tf.float32))
+            x=tf.TensorSpec(shape=[None, fragment_length], dtype=tf.float32))
 
     @tf.function
     def __call__(self, x):
@@ -41,7 +38,7 @@ class ExportModel(tf.Module):
         if x.dtype == tf.string:
             x = tf.io.read_file(x)
             x, _ = tf.audio.decode_wav(
-                x, desired_channels=1, desired_samples=FRAGMENT_LENGTH,)
+                x, desired_channels=1, desired_samples=self.fragment_length,)
             x = tf.squeeze(x, axis=-1)
             x = x[tf.newaxis, :]
         if(self.hamming):    

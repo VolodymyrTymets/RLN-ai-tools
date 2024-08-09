@@ -9,7 +9,8 @@ import numpy as np
 import tensorflow as tf
 
 RATE = 44100
-FRAGMENT_LENGTH = RATE * 2
+FRAGMENT_LENGTH = int(RATE / 10)
+DURATION = round(1 / (RATE / FRAGMENT_LENGTH), 2)
 
 def get_files(dir_path): 
   return [f for f in listdir(dir_path) if isfile(join(dir_path, f)) and f != '.DS_Store']
@@ -21,11 +22,11 @@ def get_wave(file_full_path):
   return x[tf.newaxis,...]
 
 DATASET_PATH = 'assetss'
-valid_dir_path = os.path.join(DATASET_PATH, 'data-set', 'valid')
+valid_dir_path = os.path.join(DATASET_PATH, 'data_set_{}s'.format(DURATION), 'valid')
+model_dir = pathlib.Path(os.path.join(DATASET_PATH, 'rln-model_{}s'.format(DURATION)))
 b_dir_path = os.path.join(valid_dir_path, 'breath')
 n_dir_path = os.path.join(valid_dir_path, 'noise')
 s_dir_path = os.path.join(valid_dir_path, 'stimulation')
-model_dir = pathlib.Path(os.path.join(DATASET_PATH, 'rln-model_2'))
 
 
 b_files = get_files(b_dir_path)
@@ -83,25 +84,28 @@ total_n = np.sum(n_prediction) / len(n_prediction) * 100
 total_b = np.sum(b_prediction) / len(b_prediction) * 100
 total_s = np.sum(s_prediction) / len(s_prediction) * 100
 
+print('total_n ->', total_n)
+print('total_b ->', total_b)
+print('total_s ->', total_s)
+print('total ->', (total_s + total_b +  total_n) / 3)
+# cut_ext = np.vectorize(lambda f: f.replace('.wav', ''))
+# to_perc = np.vectorize(lambda x: x * 100)
 
-cut_ext = np.vectorize(lambda f: f.replace('.wav', ''))
-to_perc = np.vectorize(lambda x: x * 100)
+# fig, (ax_n, ax_b, ax_s) = plt.subplots(1, 3)
+# ax_X = range(len(n_prediction))
+# ax_n.bar(cut_ext(n_files), to_perc(n_prediction))
+# ax_n.set_ylabel('Prediction (%)', fontweight ='bold')
+# ax_n.set_xlabel('File (.wav)', fontweight ='bold')
+# ax_n.set_title('noise {}%'.format(round(total_n, 2)))
 
-fig, (ax_n, ax_b, ax_s) = plt.subplots(1, 3)
-ax_X = range(len(n_prediction))
-ax_n.bar(cut_ext(n_files), to_perc(n_prediction))
-ax_n.set_ylabel('Prediction (%)', fontweight ='bold')
-ax_n.set_xlabel('File (.wav)', fontweight ='bold')
-ax_n.set_title('noise {}%'.format(round(total_n, 2)))
+# ax_b.bar(cut_ext(b_files), to_perc(b_prediction))
+# ax_b.set_xlabel('File (.wav)', fontweight ='bold')
+# ax_b.set_title('breat {}%'.format(round(total_b, 2)))
 
-ax_b.bar(cut_ext(b_files), to_perc(b_prediction))
-ax_b.set_xlabel('File (.wav)', fontweight ='bold')
-ax_b.set_title('breat {}%'.format(round(total_b, 2)))
-
-ax_s.bar(cut_ext(s_files), to_perc(s_prediction))
-ax_s.set_xlabel('File (.wav)', fontweight ='bold')
-ax_s.set_title('stimulation {}%'.format(round(total_s, 2)))
+# ax_s.bar(cut_ext(s_files), to_perc(s_prediction))
+# ax_s.set_xlabel('File (.wav)', fontweight ='bold')
+# ax_s.set_title('stimulation {}%'.format(round(total_s, 2)))
 
 
-plt.show()
+# plt.show()
 

@@ -10,7 +10,8 @@ import numpy as np
 import tensorflow as tf
 
 RATE = 44100
-FRAGMENT_LENGTH = RATE * 2
+FRAGMENT_LENGTH = int(RATE / 2)
+DURATION = round(1 / (RATE / FRAGMENT_LENGTH), 2)
 
 def get_files(dir_path): 
   return [f for f in listdir(dir_path) if isfile(join(dir_path, f)) and f != '.DS_Store']
@@ -22,11 +23,11 @@ def get_wave(file_full_path):
   return x[tf.newaxis,...]
 
 DATASET_PATH = 'assetss'
-valid_dir_path = os.path.join(DATASET_PATH, 'data-set', 'valid')
+valid_dir_path = os.path.join(DATASET_PATH, 'data_set_{}s'.format(DURATION), 'valid')
+model_dir = pathlib.Path(os.path.join(DATASET_PATH, 'rln-model_{}s'.format(DURATION)))
 b_dir_path = os.path.join(valid_dir_path, 'breath')
 n_dir_path = os.path.join(valid_dir_path, 'noise')
 s_dir_path = os.path.join(valid_dir_path, 'stimulation')
-model_dir = pathlib.Path(os.path.join(DATASET_PATH, 'rln-model_2'))
 
 
 b_files = get_files(b_dir_path)

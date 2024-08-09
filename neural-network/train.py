@@ -15,8 +15,9 @@ np.random.seed(seed)
 DATASET_PATH = 'assetss'
 EPOCHS = 10
 RATE = 44100
-FRAGMENT_LENGTH = RATE * 2
+FRAGMENT_LENGTH = int(RATE / 10)
 WITH_HUMMING = True
+DURATION = round(1 / (RATE / FRAGMENT_LENGTH), 2)
 
 # utils
 
@@ -38,7 +39,7 @@ def ds_to_hamming(ds):
 
 
 # Form data storage
-data_dir = pathlib.Path(os.path.join(DATASET_PATH, 'data-set', 'train'))
+data_dir = pathlib.Path(os.path.join(DATASET_PATH, 'data_set_{}s'.format(DURATION), 'train'))
 train_ds, val_ds = tf.keras.utils.audio_dataset_from_directory(
     directory=data_dir,
     batch_size=32,
@@ -109,8 +110,8 @@ for example_spectrograms, example_spect_labels in train_spectrogram_ds.take(1):
     )
 
 # Save model
-export = ExportModel(model=model, label_names=label_names, hamming=WITH_HUMMING)
-model_dir = pathlib.Path(os.path.join(DATASET_PATH, 'rln-model_{}'.format(int(FRAGMENT_LENGTH / RATE))))
+export = ExportModel(model=model, label_names=label_names, hamming=WITH_HUMMING, fragment_length=FRAGMENT_LENGTH)
+model_dir = pathlib.Path(os.path.join(DATASET_PATH, 'rln-model_{}s'.format(DURATION)))
 tf.saved_model.save(export, model_dir)
 
 print('Model is saved to: {}'.format(model_dir))
