@@ -1,8 +1,11 @@
 import os
+from os import listdir
+from os.path import isfile, join
 import wave
 import struct
 import uuid
 import numpy as np
+import tensorflow_io as tfio
 
 
 # MIC settings
@@ -11,26 +14,62 @@ CHANNELS = 1
 MAX_AMPLITUDE = 32767
 # sample rate - count of samples per seconds
 RATE = 44100
+FRAGMENT_LENGTH = RATE * 2
 MAX_FRAGMENT_LENGTH = RATE * 2
 MIN_FRAGMENT_LENGTH = RATE / 0.3
 # on how much (in percent) amplitude shoulb be upper silence to determinate start of fragment
 THRESHOLD_OF_SILENCE = 0.8
 
-ASSETSS_FOLDER = '../assetss'
+ASSETSS_FOLDER = 'assets'
+
 
 
 class Fragmenter:
-    def __init__(self, source_file):
+    def __init__(self, source_file, file_name):
         self.sample_size = None
         self.fragment = []
         self.rare_fragment = []
         self.noise = []
         self.rare_noise = []
-        self.source_file = source_file        
+        self.source_file = source_file  
+        self.file_name = file_name;
 
     def create_folder(self, directory: str):
         if not os.path.exists(directory):
             os.makedirs(directory)
+
+    def to_chunks(self, lst, n):
+        """Yield successive n-sized chunks from lst."""
+        for i in range(0, len(lst), n):
+            yield lst[i:i + n]        
+
+    def write_fragment(self, wave):
+        trimed = self.thim_noise(wave)
+        try:
+            chunks = self.to_chunks(trimed, FRAGMENT_LENGTH)
+            for chunk in chunks:
+                if(len(chunk) < FRAGMENT_LENGTH):
+                    return
+                # windowed_chunk= chunk * np.hamming(len(chunk))
+                self.write_chunk(chunk, 'fragment')
+        except Exception as e:
+            print("write_fragment: An exception occurred")
+            print(e)
+            return
+            
+
+    def write_noise(self, wave):
+        try:
+            chunks = self.to_chunks(wave, FRAGMENT_LENGTH)
+            for chunk in chunks:
+                if(len(chunk) < FRAGMENT_LENGTH):
+                    return
+                # windowed_chunk= chunk * np.hamming(len(chunk))
+                self.write_chunk(chunk, 'noise')
+        except Exception as e:
+            print("write_fragment: An exception occurred")
+            print(e)
+        return     
 
     def write_chunk(self, chunk, type='fragments'):
         file_path = os.path.join(ASSETSS_FOLDER, 'output', type)
@@ -51,6 +90,10 @@ class Fragmenter:
     def save_noise(self, amplitude_chunk, rare_chunk):
         self.noise = np.concatenate((self.noise, amplitude_chunk))
         self.rare_noise = np.concatenate((self.rare_noise, rare_chunk))
+
+    def thim_noise(self, waveform):
+        b_position = tfio.audio.trim(waveform, axis=0, epsilon=0.1).numpy()
+        return waveform[b_position[0]:b_position[1]]
 
     def clear_fragment(self):
         self.fragment = []
@@ -89,8 +132,8 @@ class Fragmenter:
         elif (is_tail):
             self.save_fragment(amplitude_chunk=chunk, rare_chunk=y)
         elif (is_end):
-            self.write_chunk(self.rare_fragment, 'fragments')
-            self.write_chunk(self.rare_noise, 'noise')
+            self.write_fragment(self.rare_fragment)
+            self.write_noise(self.rare_noise)
             self.clear_fragment()
             self.clear_noise()
         else:
@@ -99,15 +142,19 @@ class Fragmenter:
 
 
 def main():
-    file_path = os.path.join(ASSETSS_FOLDER, 'input', 'breath.wav')
-    print('--> read:', file_path)
-    wav_file = wave.open(file_path, 'rb')
-    fragmenter = Fragmenter(wav_file)
-    data = wav_file.readframes(nFFT)
+    valid_dir_path = os.path.join(ASSETSS_FOLDER, 'input', '00')
+    onlyfiles = [f for f in listdir(valid_dir_path) if isfile(join(valid_dir_path, f)) and f != '.DS_Store']
 
-    while data != b'':
-        fragmenter.find_fragment(data)
+    for file in onlyfiles:
+        file_path = os.path.join(valid_dir_path, file)
+        print('--> read:', file_path)
+        wav_file = wave.open(file_path, 'rb')   
+        fragmenter = Fragmenter(wav_file, file)
         data = wav_file.readframes(nFFT)
+
+        while data != b'':
+            fragmenter.find_fragment(data)
+            data = wav_file.readframes(nFFT)
 
 
 main()
