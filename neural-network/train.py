@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras import models
+from matplotlib import pyplot as plt
 
 from model import ExportModel, get_spectrogram, get_hamming
 
@@ -16,7 +17,7 @@ DATASET_PATH = 'assetss'
 EPOCHS = 10
 RATE = 44100
 FRAGMENT_LENGTH = int(RATE / 10)
-WITH_HUMMING = True
+WITH_HUMMING = False
 DURATION = round(1 / (RATE / FRAGMENT_LENGTH), 2)
 
 # utils
@@ -67,6 +68,7 @@ train_spectrogram_ds = train_spectrogram_ds.cache().shuffle(
     10000).prefetch(tf.data.AUTOTUNE)
 val_spectrogram_ds = val_spectrogram_ds.cache().prefetch(tf.data.AUTOTUNE)
 
+history = None
 for example_spectrograms, example_spect_labels in train_spectrogram_ds.take(1):
     input_shape = example_spectrograms.shape[1:]
     num_labels = len(label_names)
@@ -87,6 +89,7 @@ for example_spectrograms, example_spect_labels in train_spectrogram_ds.take(1):
         layers.Conv2D(32, 3, activation='relu'),
         layers.Conv2D(64, 3, activation='relu'),
         layers.MaxPooling2D(),
+        # Flatten the result to feed into DNN
         layers.Dropout(0.25),
         layers.Flatten(),
         layers.Dense(128, activation='relu'),
@@ -102,7 +105,7 @@ for example_spectrograms, example_spect_labels in train_spectrogram_ds.take(1):
         metrics=['accuracy'],
     )
 
-    model.fit(
+    history = model.fit(
         train_spectrogram_ds,
         validation_data=val_spectrogram_ds,
         epochs=EPOCHS,
@@ -115,3 +118,22 @@ model_dir = pathlib.Path(os.path.join(DATASET_PATH, 'rln-model_{}s'.format(DURAT
 tf.saved_model.save(export, model_dir)
 
 print('Model is saved to: {}'.format(model_dir))
+
+
+metrics = history.history
+plt.figure(figsize=(16,6))
+plt.subplot(1,2,1)
+plt.plot(history.epoch, metrics['loss'], metrics['val_loss'])
+plt.legend(['loss', 'val_loss'])
+plt.ylim([0, max(plt.ylim())])
+plt.xlabel('Epoch')
+plt.ylabel('Loss [CrossEntropy]')
+
+plt.subplot(1,2,2)
+plt.plot(history.epoch, 100*np.array(metrics['accuracy']), 100*np.array(metrics['val_accuracy']))
+plt.legend(['accuracy', 'val_accuracy'])
+plt.ylim([0, 100])
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy [%]')
+
+plt.show()
