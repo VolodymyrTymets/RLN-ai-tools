@@ -1,5 +1,5 @@
 import os
-
+import timeit
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
@@ -11,7 +11,7 @@ from matplotlib.lines import Line2D
 DATASET_PATH = 'assets'
 nFFT = 512
 RATE = 44100
-FRAGMENT_LENGTH = int(RATE / 2)
+FRAGMENT_LENGTH = int(RATE / 10)
 DURATION = round(1 / (RATE / FRAGMENT_LENGTH), 2)
 
 model_dir = pathlib.Path(os.path.join(DATASET_PATH, 'rln-model_{}s'.format(DURATION)))
@@ -33,7 +33,7 @@ def get_chank_label_by_model(wave):
     wave_label = label_names[i]
     return wave_label        
 
-x = os.path.join(DATASET_PATH, 'test2.wav')
+x = os.path.join(DATASET_PATH, 'test3.wav')
 x = tf.io.read_file(str(x))
 x, sample_rate = tf.audio.decode_wav(x, desired_channels=1, desired_samples=RATE * 12,)
 x = tf.squeeze(x, axis=-1)
@@ -54,8 +54,9 @@ for lin_i, lin_y in enumerate(chunks):
     lineN.append((x, y)) 
     x = x + 1
   segments.append(lineN)
-  # windowed_lin_y= lin_y * np.hamming(len(lin_y))
+  windowed_lin_y= lin_y * np.hamming(len(lin_y))
   line_label = get_chank_label_by_model(lin_y)
+  print("Labeling time:", timeit.timeit(lambda: get_chank_label_by_model(lin_y), number=1), "seconds")
   color = 'red' if 'stimulation' in str(line_label) else 'blue'
   color = 'green' if 'breath' in str(line_label) else color
   linecolors.append(color)

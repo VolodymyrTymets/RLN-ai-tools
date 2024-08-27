@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
 import tensorflow as tf
+import timeit
 
 RATE = 44100
 FRAGMENT_LENGTH = int(RATE / 2)
@@ -64,8 +65,25 @@ for file in s_files:
   s_names.append(file)  
 
 
+def get_spectrogram(waveform):
+    # Convert the waveform to a spectrogram via a STFT.
+    spectrogram = tf.signal.stft(
+        waveform, frame_length=256, frame_step=128)
 
-file_indexs = [0, 1, 4, 7]
+    # Obtain the magnitude of the STFT.
+    spectrogram = tf.abs(spectrogram)
+    # Add a `channels` dimension, so that the spectrogram can be used
+    # as image-like input data with convolution layers (which expect
+    # shape (`batch_size`, `height`, `width`, `channels`).
+    spectrogram = spectrogram[..., tf.newaxis]
+    return spectrogram
+
+get_spectrogram_as_graph = tf.function(get_spectrogram)
+
+print("Eager execution:", timeit.timeit(lambda: get_spectrogram(waveform=n_waves[0]), number=1000), "seconds")
+print("Eager execution graph:", timeit.timeit(lambda: get_spectrogram_as_graph(waveform=n_waves[0]), number=1000), "seconds")
+
+file_indexs = [0]
 for file_index in file_indexs:
   ## Plot
   rows = 3
@@ -75,37 +93,39 @@ for file_index in file_indexs:
   data_set = [n_waves, b_waves, s_waves]
   data_set_file_names = [n_names, b_names, s_names]
 
-  fig, axes = plt.subplots(rows, cols, figsize=(6, 4), gridspec_kw={'width_ratios': [4, 1], 'hspace': 0.5})
-  to_perc = np.vectorize(lambda x: x * 100)
 
-  for r in range(rows):
-      w_ax = axes[r][0]
-      p_ax = axes[r][1]
 
-      wave = data_set[r][file_index]
-      file_name = data_set_file_names[r][file_index]
-      print('prediction for file:', file_name)
+  # fig, axes = plt.subplots(rows, cols, figsize=(6, 4), gridspec_kw={'width_ratios': [4, 1], 'hspace': 0.5})
+  # to_perc = np.vectorize(lambda x: x * 100)
+
+  # for r in range(rows):
+  #     w_ax = axes[r][0]
+  #     p_ax = axes[r][1]
+
+  #     wave = data_set[r][file_index]
+  #     file_name = data_set_file_names[r][file_index]
+  #     print('prediction for file:', file_name)
       
-      result = model(tf.constant(wave))
-      prediction = result['predictions']
-      print('prediction:', tf.nn.softmax(prediction[0]))
-      # wave
-      ax = wave.numpy()[0]
-      ax = ax * np.hamming(len(ax))
-      w_ax.plot(ax)
-      w_ax.set_ylim([-1.1, 1.1])
-      w_ax.set_ylabel(file_name, fontweight ='bold')
-      w_ax.xaxis.set_major_locator(ticker.NullLocator())
-      # w_ax.set_title(str(file_name))
+  #     result = model(tf.constant(wave))
+  #     prediction = result['predictions']
+  #     print('prediction:', tf.nn.softmax(prediction[0]))
+  #     # wave
+  #     ax = wave.numpy()[0]
+  #     ax = ax * np.hamming(len(ax))
+  #     w_ax.plot(ax)
+  #     w_ax.set_ylim([-1.1, 1.1])
+  #     w_ax.set_ylabel(file_name, fontweight ='bold')
+  #     w_ax.xaxis.set_major_locator(ticker.NullLocator())
+  #     # w_ax.set_title(str(file_name))
 
-      # Prediction
-      label_names = np.array(result['label_names'])
-      yticks = to_perc(tf.nn.softmax(prediction[0]))
-      # ylabels = [f'{y:1.0f}%' for y in yticks]
-      p_ax.bar(['b', 'n', 's'], yticks)
+  #     # Prediction
+  #     label_names = np.array(result['label_names'])
+  #     yticks = to_perc(tf.nn.softmax(prediction[0]))
+  #     # ylabels = [f'{y:1.0f}%' for y in yticks]
+  #     p_ax.bar(['b', 'n', 's'], yticks)
 
-      # p_ax.set_yticks(yticks, labels=ylabels)
-      # p_ax.set_ylabel('Prediction (%)', fontweight ='bold')
-      # p_ax.set_title(str(file_name))
+  #     # p_ax.set_yticks(yticks, labels=ylabels)
+  #     # p_ax.set_ylabel('Prediction (%)', fontweight ='bold')
+  #     # p_ax.set_title(str(file_name))
 
-  plt.show()
+  # plt.show()
