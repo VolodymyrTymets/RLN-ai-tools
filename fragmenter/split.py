@@ -11,8 +11,8 @@ import numpy as np
 nFFT = 512
 # sample rate - count of samples per seconds
 RATE = 44100
-FRAGMENT_LENGTH = int(RATE / 10)
-DURATION = round(1 / (RATE / FRAGMENT_LENGTH), 2)
+FRAGMENT_LENGTH = int(RATE / 16.66666667)
+DURATION = round(1 / (RATE / FRAGMENT_LENGTH), 4)
 
 
 def get_only_files(path):
@@ -68,7 +68,7 @@ class Fragmenter:
         self.create_folder(self.out_folder)
         self.counter = self.counter + 1;
         file_name = os.path.join(self.out_folder, '{}_{}.wav'.format(self.counter, uuid.uuid4()))
-        print('--> write to:', file_name)
+        # print('--> write to:', file_name)
         wav_file = wave.open(file_name, 'w')
         wav_file.setparams(
             (1, source_file.getsampwidth(), source_file.getframerate(), source_file.getnframes(), "NONE", "not compressed"))
@@ -80,6 +80,7 @@ def append_duration(name):
     return '{}_{}'.format(DURATION, name)
 
 def split(path):
+    print('Start split to {}ms for {}'.format(DURATION, path))
     n_path = os.path.join(path, 'noise')
     n_out_path = os.path.join(path, append_duration('noise'))
     b_path = os.path.join(path, 'breath')
@@ -123,8 +124,7 @@ def split(path):
             s_fragmenter.split(data, wav_file, file)
             data = wav_file.readframes(nFFT)             
 
-ASSETSS_FOLDER = 'assets/data-set'
-
-
+ASSETSS_FOLDER = 'assets/data_set'
+print('Split into Duration: {}'.format(DURATION))
 split(os.path.join(ASSETSS_FOLDER, 'valid'))
 split(os.path.join(ASSETSS_FOLDER, 'train'))

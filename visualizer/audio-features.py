@@ -7,7 +7,7 @@ import tensorflow as tf
 
 DATASET_PATH = 'assets'
 nFFT = 512
-RATE = 44100
+RATE = 44100 / 160
 
 def get_spectrogram(waveform):
   # Convert the waveform to a spectrogram via a STFT.
@@ -37,7 +37,7 @@ def plot_spectrogram(spectrogram, ax):
   ax.pcolormesh(X, Y, log_spec)
 
 
-x = os.path.join(DATASET_PATH, 's.wav')
+x = os.path.join(DATASET_PATH, 'd', '12.wav')
 x = tf.io.read_file(str(x))
 x, sample_rate = tf.audio.decode_wav(x, desired_channels=1, desired_samples=RATE * 2.5,)
 x = tf.squeeze(x, axis=-1)

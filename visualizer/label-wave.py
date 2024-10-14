@@ -11,10 +11,11 @@ from matplotlib.lines import Line2D
 DATASET_PATH = 'assets'
 nFFT = 512
 RATE = 44100
-FRAGMENT_LENGTH = int(RATE / 2)
-DURATION = round(1 / (RATE / FRAGMENT_LENGTH), 2)
+FRAGMENT_LENGTH = int(RATE / 5)
+DURATION = int(round(1 / (RATE / FRAGMENT_LENGTH), 4) * 1000)
+print('--->', FRAGMENT_LENGTH)
 
-model_dir = pathlib.Path(os.path.join(DATASET_PATH, 'rln-model_{}s'.format(DURATION)))
+model_dir = pathlib.Path(os.path.join(DATASET_PATH, 'rln-model_{}'.format(DURATION)))
 model = tf.saved_model.load(model_dir)
 
 def to_chunks(lst, n):
@@ -33,8 +34,8 @@ def get_chank_label_by_model(wave):
     wave_label = label_names[i]
     return wave_label        
 
-x = os.path.join(DATASET_PATH, 'test2.wav')
-x = tf.io.read_file(str(x))
+file_path = os.path.join(DATASET_PATH, 'test3.wav')
+x = tf.io.read_file(str(file_path))
 x, sample_rate = tf.audio.decode_wav(x, desired_channels=1, desired_samples=RATE * 12,)
 x = tf.squeeze(x, axis=-1)
 x = x[tf.newaxis,...]
@@ -48,18 +49,22 @@ linecolors = []
 x = 0
 for lin_i, lin_y in enumerate(chunks):
   lineN = []
-  lin_x = np.arange(len(lin_y))
+  # lin_x = np.arange(len(lin_y))
   for i, y in enumerate(lin_y):
     # print('-',[x, y])
     lineN.append((x, y)) 
     x = x + 1
   segments.append(lineN)
   # windowed_lin_y= lin_y * np.hamming(len(lin_y))
-  line_label = get_chank_label_by_model(lin_y)
+  try:
+    line_label = get_chank_label_by_model(lin_y)
+  except:
+     line_label = 'noise'
   color = 'red' if 'stimulation' in str(line_label) else 'blue'
   color = 'green' if 'breath' in str(line_label) else color
   linecolors.append(color)
 
+print('Labe with duration {}: {}'.format(DURATION, file_path))
 # Create figure
 fig, ax = plt.subplots(figsize=(12, 2))
 line_collection = LineCollection(segments=segments, colors=linecolors)

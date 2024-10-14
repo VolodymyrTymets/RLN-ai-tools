@@ -9,8 +9,8 @@ import numpy as np
 import tensorflow as tf
 
 RATE = 44100
-FRAGMENT_LENGTH = int(RATE / 10)
-DURATION = round(1 / (RATE / FRAGMENT_LENGTH), 2)
+FRAGMENT_LENGTH = int(RATE * 2)
+DURATION = int(round(1 / (RATE / FRAGMENT_LENGTH), 4) * 1000)
 
 def get_files(dir_path): 
   return [f for f in listdir(dir_path) if isfile(join(dir_path, f)) and f != '.DS_Store']
@@ -22,8 +22,8 @@ def get_wave(file_full_path):
   return x[tf.newaxis,...]
 
 DATASET_PATH = 'assetss'
-valid_dir_path = os.path.join(DATASET_PATH, 'data_set_{}s'.format(DURATION), 'valid')
-model_dir = pathlib.Path(os.path.join(DATASET_PATH, 'rln-model_{}s'.format(DURATION)))
+valid_dir_path = os.path.join(DATASET_PATH, 'data_set_{}'.format(DURATION), 'valid')
+model_dir = pathlib.Path(os.path.join(DATASET_PATH, 'rln-model_{}'.format(DURATION)))
 b_dir_path = os.path.join(valid_dir_path, 'breath')
 n_dir_path = os.path.join(valid_dir_path, 'noise')
 s_dir_path = os.path.join(valid_dir_path, 'stimulation')
@@ -83,11 +83,33 @@ for wave in s_waves:
 total_n = np.sum(n_prediction) / len(n_prediction) * 100
 total_b = np.sum(b_prediction) / len(b_prediction) * 100
 total_s = np.sum(s_prediction) / len(s_prediction) * 100
+total = (total_s + total_b +  total_n) / 3
 
 print('total_n ->', total_n)
 print('total_b ->', total_b)
 print('total_s ->', total_s)
-print('total ->', (total_s + total_b +  total_n) / 3)
+print('total ->', total)
+
+
+plt.figure(figsize=(12,2))
+plt.subplot(1,2,1)
+plt.plot(np.arange(len(n_prediction)) + 1, np.multiply(n_prediction, 100), color='blue')
+plt.plot(np.arange(len(b_prediction)) + 1, np.multiply(b_prediction, 100), color='green')
+plt.plot(np.arange(len(s_prediction)) + 1, np.multiply(s_prediction, 100), color='red')
+plt.legend(['n', 'b', 's'])
+plt.ylim([0, max(plt.ylim())])
+plt.ylabel('Prediciont %')
+plt.xlabel('Count of fragments')
+
+ax = plt.subplot(1,2,2)
+p = ax.bar(['n', 'b', 's', 'mean'], [total_n, total_b, total_s, total])
+ax.bar_label(p, label_type='center')
+plt.ylabel('Prediciont %')
+plt.xlabel('Labels')
+plt.legend()
+
+plt.show()
+
 # cut_ext = np.vectorize(lambda f: f.replace('.wav', ''))
 # to_perc = np.vectorize(lambda x: x * 100)
 
