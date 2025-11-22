@@ -16,7 +16,7 @@ source localenv/bin/activate
 - Train model:
 Add files to assets for training and run    
 
-`python 3 train.py`
+`python3 train.py`
 
 - Valid model:
 Add files to `assets/valid`  
