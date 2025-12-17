@@ -7,15 +7,17 @@ from matplotlib import pyplot as plt
 from matplotlib.collections import LineCollection
 import pathlib
 from matplotlib.lines import Line2D
+import pyloudnorm as pyln
 
 DATASET_PATH = 'assets'
 nFFT = 512
 RATE = 44100
 FRAGMENT_LENGTH = int(RATE / 5)
-DURATION = int(round(1 / (RATE / FRAGMENT_LENGTH), 4) * 1000)
+DURATION = 200
 print('--->', FRAGMENT_LENGTH)
 
 model_dir = pathlib.Path(os.path.join(DATASET_PATH, 'rln-model_{}'.format(DURATION)))
+print('--model_dir-->', model_dir)
 model = tf.saved_model.load(model_dir)
 
 def to_chunks(lst, n):
@@ -32,32 +34,39 @@ def get_chank_label_by_model(wave):
     max_value = max(prediction)
     i, = np.where(prediction == max_value)
     wave_label = label_names[i]
-    return wave_label        
+    return wave_label     
+  
+def normalize(data: np.ndarray, sample_rate: float):
+    meter = pyln.Meter(sample_rate) # create BS.1770 meter
+    loudness = meter.integrated_loudness(data) # measure loudness
+    return pyln.normalize.peak(data, -1.0)
+     
 
-file_path = os.path.join(DATASET_PATH, 'test3.wav')
+file_path = os.path.join(DATASET_PATH, 'test', 'test5.wav')
 x = tf.io.read_file(str(file_path))
-x, sample_rate = tf.audio.decode_wav(x, desired_channels=1, desired_samples=RATE * 12,)
+x, sample_rate = tf.audio.decode_wav(x, desired_channels=1, desired_samples=RATE * 16)
 x = tf.squeeze(x, axis=-1)
 x = x[tf.newaxis,...]
-waveform = x.numpy()[0];
+_waveform = x.numpy()[0];
+waveform = normalize(data=_waveform, sample_rate=RATE) 
+waveform = _waveform
 
-chunks = to_chunks(waveform, int(FRAGMENT_LENGTH))
+chunks = [x for x in to_chunks(_waveform, int(FRAGMENT_LENGTH))]
+chunks_n = to_chunks(waveform, int(FRAGMENT_LENGTH))
 
 # Form segments for collection of lines   
 segments = []
 linecolors = []
 x = 0
-for lin_i, lin_y in enumerate(chunks):
+for i, chunk_n in enumerate(chunks_n):
   lineN = []
-  # lin_x = np.arange(len(lin_y))
+  lin_y = chunks[i]
   for i, y in enumerate(lin_y):
-    # print('-',[x, y])
     lineN.append((x, y)) 
     x = x + 1
   segments.append(lineN)
-  # windowed_lin_y= lin_y * np.hamming(len(lin_y))
   try:
-    line_label = get_chank_label_by_model(lin_y)
+    line_label = get_chank_label_by_model(chunk_n)
   except:
      line_label = 'noise'
   color = 'red' if 'stimulation' in str(line_label) else 'blue'

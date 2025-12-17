@@ -11,7 +11,7 @@ import numpy as np
 nFFT = 512
 # sample rate - count of samples per seconds
 RATE = 44100
-FRAGMENT_LENGTH = int(RATE / 16.66666667)
+FRAGMENT_LENGTH = int(RATE / 5)
 DURATION = round(1 / (RATE / FRAGMENT_LENGTH), 4)
 
 
@@ -124,7 +124,7 @@ def split(path):
             s_fragmenter.split(data, wav_file, file)
             data = wav_file.readframes(nFFT)             
 
-ASSETSS_FOLDER = 'assets/data_set'
+ASSETSS_FOLDER = 'assets/data_set_2s_n_f'
 print('Split into Duration: {}'.format(DURATION))
 split(os.path.join(ASSETSS_FOLDER, 'valid'))
 split(os.path.join(ASSETSS_FOLDER, 'train'))

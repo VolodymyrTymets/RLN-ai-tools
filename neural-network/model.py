@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 RATE = 44100
-FRAGMENT_LENGTH = int(RATE / 16.66666667)
+FRAGMENT_LENGTH = int(RATE / 5)
 
 @tf.function(input_signature=[tf.TensorSpec(shape=[None, FRAGMENT_LENGTH], dtype=tf.float32)])
 def get_hamming(waveform):

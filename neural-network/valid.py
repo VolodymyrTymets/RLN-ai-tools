@@ -9,7 +9,7 @@ import numpy as np
 import tensorflow as tf
 
 RATE = 44100
-FRAGMENT_LENGTH = int(RATE * 2)
+FRAGMENT_LENGTH = int(RATE / 5)
 DURATION = int(round(1 / (RATE / FRAGMENT_LENGTH), 4) * 1000)
 
 def get_files(dir_path): 
@@ -22,8 +22,8 @@ def get_wave(file_full_path):
   return x[tf.newaxis,...]
 
 DATASET_PATH = 'assetss'
-valid_dir_path = os.path.join(DATASET_PATH, 'data_set_{}'.format(DURATION), 'valid')
-model_dir = pathlib.Path(os.path.join(DATASET_PATH, 'rln-model_{}'.format(DURATION)))
+valid_dir_path = os.path.join(DATASET_PATH, 'filter', 'data_set_{}'.format(DURATION), 'valid')
+model_dir = pathlib.Path(os.path.join(DATASET_PATH, 'filter', 'rln-model_{}'.format(DURATION)))
 b_dir_path = os.path.join(valid_dir_path, 'breath')
 n_dir_path = os.path.join(valid_dir_path, 'noise')
 s_dir_path = os.path.join(valid_dir_path, 'stimulation')

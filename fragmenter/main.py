@@ -7,6 +7,7 @@ import librosa
 from src.fragmenter.fragmenter import Fragmenter
 from src.filter.filter import filter_fragments
 
+
 ASSETS_FOLDER = 'assets'
 frame_length = 2048
 hop_length = 64
