@@ -69,3 +69,13 @@ class FrequencyDomainFeatures:
 
   def melspectogram(self, signal: np.ndarray, sr: int, frame_length: int, hop_length: int, n_mels: int = 128):
     return librosa.feature.melspectrogram(y=signal, sr=sr, n_fft=frame_length, hop_length=hop_length, n_mels=n_mels)
+
+  def mfcc(self, signal: np.ndarray, sr: int, n_mfcc: int = 12):
+    return librosa.feature.mfcc(y=signal, n_mfcc=n_mfcc, sr=sr)
+
+  def mfcc_derivatives(self, signal: np.ndarray, sr: int, n_mfcc: int = 12):
+    mfccs = self.mfcc(signal, sr, n_mfcc)
+    delta_mfccs = librosa.feature.delta(mfccs)
+    delta2_mfccs = librosa.feature.delta(mfccs, order=2)
+    return np.concatenate((mfccs, delta_mfccs, delta2_mfccs))
+

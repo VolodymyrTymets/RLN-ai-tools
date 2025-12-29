@@ -120,8 +120,8 @@ n_1_RSME = t_domain.RSME(signal=n_1, frame_length=frame_length, hop_length=hop_l
 # plt.show()
 
 ## melt spectrogram
-frame_length = 1024
-hop_length = frame_length // 4
+# frame_length = 1024
+# hop_length = frame_length // 4
 
 # plt.figure(figsize=(10, 5))
 # librosa.display.specshow(f_domain.melfilters(sr=sr, frame_length=frame_length, n_mels=10),
@@ -131,13 +131,25 @@ hop_length = frame_length // 4
 #                          x_axis="linear")
 # plt.colorbar(format="%+2.f db")
 # plt.show()
+#
+# plt.figure(figsize=(10, 5))
+# mel_spectrogram = f_domain.melspectogram(signal=b_1, sr=sr, frame_length=frame_length, hop_length=hop_length, n_mels=10)
+# plt.title("Breath")
+# # mel_spectrogram = f_domain.melspectogram(signal=n_1, sr=sr, frame_length=frame_length, hop_length=hop_length, n_mels=10)
+# # plt.title("Stimulation")
+#
+# librosa.display.specshow(mel_spectrogram, x_axis="time", y_axis="mel", sr=sr)
+# plt.colorbar(format="%+2.f db")
+# plt.show()
 
+## MFCCs
 plt.figure(figsize=(10, 5))
-mel_spectrogram = f_domain.melspectogram(signal=b_1, sr=sr, frame_length=frame_length, hop_length=hop_length, n_mels=10)
+mfccs = f_domain.mfcc(signal=b_1, sr=sr, n_mfcc=12)
 plt.title("Breath")
-# mel_spectrogram = f_domain.melspectogram(signal=n_1, sr=sr, frame_length=frame_length, hop_length=hop_length, n_mels=10)
+# mfccs = f_domain.mfcc(signal=n_1, sr=sr, n_mfcc=12)
 # plt.title("Stimulation")
-
-librosa.display.specshow(mel_spectrogram, x_axis="time", y_axis="mel", sr=sr)
-plt.colorbar(format="%+2.f db")
+librosa.display.specshow(mfccs,
+                         x_axis="time",
+                         sr=sr)
+plt.colorbar(format="%+2.f")
 plt.show()
