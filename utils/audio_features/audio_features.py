@@ -1,5 +1,6 @@
 import librosa
 import numpy as np
+import math
 from scipy import signal as sp_signal
 
 
@@ -48,6 +49,14 @@ class FrequencyDomainFeatures:
     nup_freq_bins = int(len(magnitude) * f_ration)
     return magnitude[:nup_freq_bins]
 
+  def _calculate_split_frequency_bin(self, sr: int, split_frequency: int, num_frequency_bins: int):
+    """Infer the frequency bin associated to a given split frequency."""
+
+    frequency_range = sr / 2
+    frequency_delta_per_bin = frequency_range / num_frequency_bins
+    split_frequency_bin = math.floor(split_frequency / frequency_delta_per_bin)
+    return int(split_frequency_bin)
+
   def fft(self, signal: np.ndarray, sr: int, frame_length: int, hop_length: int):
     # Step 1 framing
     frames = librosa.util.frame(signal, frame_length=frame_length, hop_length=hop_length, axis=0)
@@ -60,9 +69,10 @@ class FrequencyDomainFeatures:
     frequency = self._freq_for_magnitude(magnitude, sr)
     return magnitude, frequency
 
-  def stft(self, signal: np.ndarray, frame_length: int, hop_length: int):
+  def stft(self, signal: np.ndarray, frame_length: int, hop_length: int, log_scale: bool = False):
     s_scale = librosa.stft(signal, n_fft=frame_length, hop_length=hop_length)
-    return np.abs(s_scale) ** 2
+    return np.abs(s_scale) ** 2 if log_scale == True  else s_scale
+
 
   def melfilters(self, sr: int, frame_length: int, n_mels: int = 128):
     return librosa.filters.mel(n_fft=frame_length, sr=sr, n_mels=n_mels)
@@ -78,4 +88,27 @@ class FrequencyDomainFeatures:
     delta_mfccs = librosa.feature.delta(mfccs)
     delta2_mfccs = librosa.feature.delta(mfccs, order=2)
     return np.concatenate((mfccs, delta_mfccs, delta2_mfccs))
+
+  def band_energy_ratio(self, stft: np.ndarray, sr: int, split_frequency: int):
+    """Calculate band energy ratio with a given split frequency."""
+
+    split_frequency_bin = self._calculate_split_frequency_bin(sr, split_frequency, len(stft[0]))
+    print(split_frequency_bin)
+    band_energy_ratio = []
+
+    # calculate power spectrogram
+    power_spectrogram = np.abs(stft) ** 2
+    power_spectrogram = power_spectrogram.T
+
+    # calculate BER value for each frame
+    for frame in power_spectrogram:
+      sum_power_low_frequencies = frame[:split_frequency_bin].sum()
+      sum_power_high_frequencies = frame[split_frequency_bin:].sum()
+      band_energy_ratio_current_frame = sum_power_low_frequencies / sum_power_high_frequencies
+      band_energy_ratio.append(band_energy_ratio_current_frame)
+
+    return np.array(band_energy_ratio)
+
+  def BER(self, stft: np.ndarray, sr: int, split_frequency: int):
+    return self.band_energy_ratio(stft, sr, split_frequency)
 

@@ -118,6 +118,38 @@ n_1_RSME = t_domain.RSME(signal=n_1, frame_length=frame_length, hop_length=hop_l
 # # plt.title("Breath")
 # plt.title("Stimulation")
 # plt.show()
+## Band energy ratio
+frame_length = 2048
+hop_length = frame_length // 4
+y_b = f_domain.stft(signal=b_1, frame_length=frame_length, hop_length=hop_length)
+y_n = f_domain.stft(signal=n_1, frame_length=frame_length, hop_length=hop_length)
+b_1_BER = f_domain.BER(stft=y_b, sr=sr, split_frequency=20000)
+n_1_BER = f_domain.BER(stft=y_n, sr=sr, split_frequency=20000)
+frames = range(len(b_1_BER))
+t = librosa.frames_to_time(frames, hop_length=hop_length)
+diff= int(len(b_1_BER) - len(n_1_BER))
+n_1_BER = np.concatenate((n_1_BER, np.zeros(diff, dtype=int)))
+
+plt.figure(figsize=(14, 5))
+
+
+# plt.xlabel('Frames')
+# plt.ylabel('BER')
+
+plt.subplot(1, 2, 1)
+plt.plot(b_1_BER, color="black")
+plt.title("Breath")
+plt.ylim((0, 140000))
+plt.xlabel('Frames')
+plt.ylabel('BER')
+
+plt.subplot(1, 2, 2)
+plt.plot( n_1_BER, color="black")
+plt.xlabel('Frames')
+plt.ylabel('BER')
+plt.title("Stimulation")
+# plt.tight_layout()
+plt.show()
 
 ## melt spectrogram
 # frame_length = 1024
@@ -143,13 +175,13 @@ n_1_RSME = t_domain.RSME(signal=n_1, frame_length=frame_length, hop_length=hop_l
 # plt.show()
 
 ## MFCCs
-plt.figure(figsize=(10, 5))
-mfccs = f_domain.mfcc(signal=b_1, sr=sr, n_mfcc=12)
-plt.title("Breath")
-# mfccs = f_domain.mfcc(signal=n_1, sr=sr, n_mfcc=12)
-# plt.title("Stimulation")
-librosa.display.specshow(mfccs,
-                         x_axis="time",
-                         sr=sr)
-plt.colorbar(format="%+2.f")
-plt.show()
+# plt.figure(figsize=(10, 5))
+# mfccs = f_domain.mfcc(signal=b_1, sr=sr, n_mfcc=12)
+# plt.title("Breath")
+# # mfccs = f_domain.mfcc(signal=n_1, sr=sr, n_mfcc=12)
+# # plt.title("Stimulation")
+# librosa.display.specshow(mfccs,
+#                          x_axis="time",
+#                          sr=sr)
+# plt.colorbar(format="%+2.f")
+# plt.show()
