@@ -82,18 +82,37 @@ n_1_RSME = t_domain.RSME(signal=n_1, frame_length=frame_length, hop_length=hop_l
 
 
 ## spectr
-magnitude_b, frequency_b = f_domain.fft(signal=b_1, sr=sr, frame_length=frame_length, hop_length=hop_length)
-magnitude_n, frequency_n = f_domain.fft(signal=n_1, sr=sr, frame_length=frame_length, hop_length=hop_length)
-
-plt.figure(figsize=(7,4))
+# magnitude_b, frequency_b = f_domain.fft(signal=b_1, sr=sr, frame_length=frame_length, hop_length=hop_length)
+# magnitude_n, frequency_n = f_domain.fft(signal=n_1, sr=sr, frame_length=frame_length, hop_length=hop_length)
+#
+# plt.figure(figsize=(7,4))
+# # plt.xlabel('Frequency Hz')
+# # plt.ylabel('Magnitude')
+# # plt.plot( frequency_b, magnitude_b, color="black")
+# # plt.title("Breath")
+#
 # plt.xlabel('Frequency Hz')
 # plt.ylabel('Magnitude')
-# plt.plot( frequency_b, magnitude_b, color="black")
-# plt.title("Breath")
+# plt.plot( frequency_n, magnitude_n, color="black")
+# plt.title("Stimulation")
+#
+# plt.show()
 
-plt.xlabel('Frequency Hz')
-plt.ylabel('Magnitude')
-plt.plot( frequency_n, magnitude_n, color="black")
-plt.title("Stimulation")
+
+
+## spectrogram
+y_b = f_domain.stft(signal=b_1, frame_length=frame_length, hop_length=hop_length)
+y_n = f_domain.stft(signal=n_1, frame_length=frame_length, hop_length=hop_length)
+
+def plot_spectrogram(Y, sr, hop_length, y_axis="log"):
+  plt.figure(figsize=(25, 10))
+  librosa.display.specshow(Y,
+                           sr=sr,
+                           hop_length=hop_length,
+                           x_axis="time",
+                           y_axis=y_axis)
+  plt.colorbar(format="%+2.f")
+
+plot_spectrogram(librosa.power_to_db(y_n), sr, hop_length)
 
 plt.show()

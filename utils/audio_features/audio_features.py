@@ -59,3 +59,7 @@ class FrequencyDomainFeatures:
     magnitude = np.mean(magnitudes, axis=0)
     frequency = self._freq_for_magnitude(magnitude, sr)
     return magnitude, frequency
+
+  def stft(self, signal: np.ndarray, frame_length: int, hop_length: int):
+    s_scale = librosa.stft(signal, n_fft=frame_length, hop_length=hop_length)
+    return np.abs(s_scale) ** 2
