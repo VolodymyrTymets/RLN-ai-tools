@@ -101,18 +101,43 @@ n_1_RSME = t_domain.RSME(signal=n_1, frame_length=frame_length, hop_length=hop_l
 
 
 ## spectrogram
-y_b = f_domain.stft(signal=b_1, frame_length=frame_length, hop_length=hop_length)
-y_n = f_domain.stft(signal=n_1, frame_length=frame_length, hop_length=hop_length)
+# y_b = f_domain.stft(signal=b_1, frame_length=frame_length, hop_length=hop_length)
+# y_n = f_domain.stft(signal=n_1, frame_length=frame_length, hop_length=hop_length)
+#
+# def plot_spectrogram(Y, sr, hop_length, y_axis="log"):
+#   plt.figure(figsize=(10, 5))
+#   librosa.display.specshow(Y,
+#                            sr=sr,
+#                            hop_length=hop_length,
+#                            x_axis="time",
+#                            y_axis=y_axis)
+#   plt.colorbar(format="%+2.f db")
+#
+#
+# plot_spectrogram(librosa.power_to_db(y_n), sr, hop_length)
+# # plt.title("Breath")
+# plt.title("Stimulation")
+# plt.show()
 
-def plot_spectrogram(Y, sr, hop_length, y_axis="log"):
-  plt.figure(figsize=(25, 10))
-  librosa.display.specshow(Y,
-                           sr=sr,
-                           hop_length=hop_length,
-                           x_axis="time",
-                           y_axis=y_axis)
-  plt.colorbar(format="%+2.f")
+## melt spectrogram
+frame_length = 1024
+hop_length = frame_length // 4
 
-plot_spectrogram(librosa.power_to_db(y_n), sr, hop_length)
+# plt.figure(figsize=(10, 5))
+# librosa.display.specshow(f_domain.melfilters(sr=sr, frame_length=frame_length, n_mels=10),
+#                          y_axis="mel",
+#                          # fmin=librosa.note_to_hz('C1'),
+#                          sr=sr,
+#                          x_axis="linear")
+# plt.colorbar(format="%+2.f db")
+# plt.show()
 
+plt.figure(figsize=(10, 5))
+mel_spectrogram = f_domain.melspectogram(signal=b_1, sr=sr, frame_length=frame_length, hop_length=hop_length, n_mels=10)
+plt.title("Breath")
+# mel_spectrogram = f_domain.melspectogram(signal=n_1, sr=sr, frame_length=frame_length, hop_length=hop_length, n_mels=10)
+# plt.title("Stimulation")
+
+librosa.display.specshow(mel_spectrogram, x_axis="time", y_axis="mel", sr=sr)
+plt.colorbar(format="%+2.f db")
 plt.show()

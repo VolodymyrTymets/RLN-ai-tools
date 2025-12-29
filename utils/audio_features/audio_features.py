@@ -63,3 +63,9 @@ class FrequencyDomainFeatures:
   def stft(self, signal: np.ndarray, frame_length: int, hop_length: int):
     s_scale = librosa.stft(signal, n_fft=frame_length, hop_length=hop_length)
     return np.abs(s_scale) ** 2
+
+  def melfilters(self, sr: int, frame_length: int, n_mels: int = 128):
+    return librosa.filters.mel(n_fft=frame_length, sr=sr, n_mels=n_mels)
+
+  def melspectogram(self, signal: np.ndarray, sr: int, frame_length: int, hop_length: int, n_mels: int = 128):
+    return librosa.feature.melspectrogram(y=signal, sr=sr, n_fft=frame_length, hop_length=hop_length, n_mels=n_mels)
