@@ -71,8 +71,7 @@ class FrequencyDomainFeatures:
 
   def stft(self, signal: np.ndarray, frame_length: int, hop_length: int, log_scale: bool = False):
     s_scale = librosa.stft(signal, n_fft=frame_length, hop_length=hop_length)
-    return np.abs(s_scale) ** 2 if log_scale == True  else s_scale
-
+    return np.abs(s_scale) ** 2 if log_scale == True else s_scale
 
   def melfilters(self, sr: int, frame_length: int, n_mels: int = 128):
     return librosa.filters.mel(n_fft=frame_length, sr=sr, n_mels=n_mels)
@@ -89,7 +88,8 @@ class FrequencyDomainFeatures:
     delta2_mfccs = librosa.feature.delta(mfccs, order=2)
     return np.concatenate((mfccs, delta_mfccs, delta2_mfccs))
 
-  def band_energy_ratio(self, stft: np.ndarray, sr: int, split_frequency: int):
+  def band_energy_ratio(self, signal: np.ndarray, sr: int, frame_length: int, hop_length: int, split_frequency: int):
+    stft = self.stft(signal, frame_length, hop_length, log_scale=False)
     """Calculate band energy ratio with a given split frequency."""
 
     split_frequency_bin = self._calculate_split_frequency_bin(sr, split_frequency, len(stft[0]))
@@ -109,6 +109,18 @@ class FrequencyDomainFeatures:
 
     return np.array(band_energy_ratio)
 
-  def BER(self, stft: np.ndarray, sr: int, split_frequency: int):
-    return self.band_energy_ratio(stft, sr, split_frequency)
+  def spectral_centroid(self, signal: np.ndarray, sr: int, frame_length: int, hop_length: int):
+    return librosa.feature.spectral_centroid(y=signal, sr=sr, n_fft=frame_length, hop_length=hop_length)[0]
 
+  def spectral_bandwidth(self, signal: np.ndarray, sr: int, frame_length: int, hop_length: int):
+    return librosa.feature.spectral_bandwidth(y=signal, sr=sr, n_fft=frame_length, hop_length=hop_length)[0]
+
+  def BER(self, signal: np.ndarray, sr: int, frame_length: int, hop_length: int, split_frequency: int):
+    return self.band_energy_ratio(signal=signal, sr=sr, frame_length=frame_length, hop_length=hop_length,
+                                  split_frequency=split_frequency)
+
+  def SC(self, signal: np.ndarray, sr: int, frame_length: int, hop_length: int):
+    return self.spectral_centroid(signal=signal, sr=sr, frame_length=frame_length, hop_length=hop_length)
+
+  def BW(self, signal: np.ndarray, sr: int, frame_length: int, hop_length: int):
+    return self.spectral_bandwidth(signal=signal, sr=sr, frame_length=frame_length, hop_length=hop_length)
